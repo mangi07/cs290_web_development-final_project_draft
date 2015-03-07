@@ -1,3 +1,11 @@
+<?php
+session_start();
+
+//code here to check for login
+
+
+?>
+
 <!DOCTYPE html>
 
 <html lang="en">
@@ -173,15 +181,31 @@
 		
 	</div>
 	
-	<!--
+	<!--ONLY FOR LEARNING PURPOSES
 	<form action="newLoc.php" method="POST" class="ajax">
 		<input type="submit" value="Submit">
 	</form>
 	-->
 	<!-- using $.post() -->
 	<button class="ajax">Submit using $.post()</button>
+	
+	<!-- Provides logout functionality: -->
+	<?php
+	/*
+		$_SESSION = array();
+		session_destroy();
+		$filePath = explode('/', $_SERVER['PHP_SELF'], -1);
+		$filePath = implode('/', $filePath);
+		$redirect = "http://" . $_SERVER['HTTP_HOST'] . $filePath;
+		header("Location: {$redirect}/login.html", true);
+		die();
+	*/
+	?>
+	
+	
 </body>
 
+</html>
 <!--
 mapbox account:
 uersname: map13

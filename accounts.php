@@ -3,6 +3,13 @@ session_start();
 
 error_reporting(E_ALL);
 
+//check if user is already logged in
+if(isset($_SESSION['user'])){
+	echo "Note: You are already logged in.<br>";
+	echo "<button onclick='window.location.href = \"main.php\"'>User Page</button>";
+	die();
+}
+
 if(isset($_POST["username"]) && 
 	isset($_POST["password"]) &&
 	isset($_POST["login_attempt"])){
@@ -32,16 +39,14 @@ if(isset($_POST["username"]) &&
 	*/
 	if(!check_fields($username, $password)) die();
 	
-	//debug
-	//echo "Debug from accounts.php line 16: " . $login_attempt;
-	
 	//check username and password against the database
 	require("db.php");	//connect to the database
-	if ($login_attempt){
+	if ($login_attempt == 'true'){
 		//database function call
 		db_login($username, $password, $mysqli);
-	} else {
+	} else if (isset($_POST["json"])){
 		//database function call
+		create_user($username, $password, $mysqli, $_POST["json"]);
 	}
 	$mysqli->close();
 	
@@ -76,7 +81,8 @@ function check_fields($user, $pass){
 	return $checks_passed;
 }
 
-//FINISHed!!
+//if the username exists and the password is correct,
+//  this will allow user to access main.php
 function db_login($user, $pass, $mysqli){
 	// Prepared statement, stage 1: prepare
 	if (!($stmt = $mysqli->prepare("SELECT password FROM users WHERE username = ?"))) {
@@ -134,13 +140,12 @@ function db_login($user, $pass, $mysqli){
 	//debug
 	//echo "Debug: $db_pass<br>";//for now, this will show in the error section of login
 	
-	//(make sure the users table has been created)
-	//check password
+	//check password and create session variable if password is correct
 	if ($pass == $db_pass){
 		echo "success";
 		//create session variable to indicate successful login
 		if(session_status() == PHP_SESSION_ACTIVE){
-			$_SESSION["logged_in"] = 1;
+			$_SESSION["user"] = $user;
 		} else {
 			echo "Error: unknown!<br>";
 		}
@@ -148,20 +153,89 @@ function db_login($user, $pass, $mysqli){
 		echo "Wrong password!<br>";
 		return;
 	}
-	
-	
-	
-	//redirect to main interface, main.php
-	/*
-	$filePath = explode('/', $_SERVER['PHP_SELF'], -1);
-		$filePath = implode('/', $filePath);
-		$redirect = "http://" . $_SERVER['HTTP_HOST'] . $filePath;
-		header("Location: {$redirect}/main.php", true);
-		die();
-	*/
+
 }
 
-//START WORKING ON FUNCTION TO CREATE USER, HERE...
+//if the username already exists, this should fail,
+//  else a new username and password will be entered as a row in the db table,
+//  and then the new user will have access to main.php through a session variable
+function create_user($user, $pass, $mysqli, $json){
+	
+	//DEFINE AND PROVIDE THE STRUCTURE OF THE JSON OBJECT EACH USER'S DATA WILL HAVE
+	/*
+	$json = json_encode(array('username' => array($user => array('entries' =>
+		array(
+			'loc_name' => null,
+			'coords' => array('lat' => null, 'lng' => null),
+			'timeframe' => array('day' => null, 'month' => null, 'year' => null)
+	)))));
+	*/
+	/*
+	$json = "{'users':['username':'$user','entries':[{'coords': {'lat':null, 'lng':null},'loc_name': null,'timeframe': {'day':null, 'month':null, 'year':null}}]]}
+	";
+	*/
+	//$json = json_encode($json, JSON_FORCE_OBJECT);
+	/*
+	{'users':
+		[
+		'username':$user,
+		'entries':
+			[
+				{ 'coords': {'lat':null, 'lng':null},
+				'loc_name': null,
+				'timeframe': {'day':number, 'month':number, 'year':number} }
+			]
+		]
+	}
+	*/
+	$json = json_encode($json, JSON_FORCE_OBJECT);
+	//$json = json_encode(array('user' => $user, $json)), JSON_FORCE_OBJECT);
+	
+	// Prepared statement, stage 1: prepare
+	if (!($stmt = $mysqli->prepare("INSERT INTO users VALUES (?, ?, ?)"))) {
+		//debug
+		echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
+		
+		//actual message to user
+		echo "Error: Failed to check the database for this user.<br>";
+		
+		//die();
+		return;
+	}
 
+	// Prepared statement, stage 2: bind and execute
+	// See http://php.net/manual/en/mysqli-stmt.bind-param.php
+	//  for bind_param("i"... description
+	if (!$stmt->bind_param("sss", $user, $pass, $json)) {
+		//debug
+		echo "Binding parameters failed: (" . $stmt->errno . ") " . $stmt->error;
+		
+		//actual message to user
+		echo "Failed to add this user to the database.<br>";
+		
+		//die();
+		return;
+	}
+
+	if (!$stmt->execute()) {
+		//debug
+		echo "Execute failed: (" . $stmt->errno . ") " . $stmt->error;
+		
+		//actual message to user
+		echo "Failed to add this user to the database.  The user may already exist.<br>";
+		
+		//die();
+		return;
+	}
+	
+	echo "success";
+	//create session variable to indicate successful login
+	if(session_status() == PHP_SESSION_ACTIVE){
+		$_SESSION["user"] = $user;
+	} else {
+		echo "Error: unknown!<br>";
+	}
+	
+}
 
 ?>

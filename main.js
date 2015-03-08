@@ -5,27 +5,43 @@ by Sam Matthews
 https://www.youtube.com/watch?v=7Tll2k57ork
 */
 
+/*
+Date api used to select dates:
+  http://www.eyecon.ro/datepicker/#implement
+*/
+
+/*
+JSON structure used: 
+	
+	{ "users":
+		[
+		"username":string,
+		"entries":
+			[
+				{ "coords": {"lat":number, "lng":number},
+				"loc_name": string,
+				"timeframe": {"day":number, "month":number, "year":number} }
+			]
+		]
+	}
+*/
+
+//VARIABLES
+var marker;
+var userData;
+//use JSON.stringify() and JSON.parse()
 
 window.onload = function (){
-	//variables
-	var markers = new Array();//use JSON.stringify() and JSON.parse()
-	//for going to and from database
-	//JSON structure of array: 
-	//  {"location":["loc_name": "London", "coords":[54,-33], "timeframe":[Date(), Date()]]}
-	//use date api to select dates:
-	//  http://www.eyecon.ro/datepicker/#implement
-	var userData = new Array();
-	//each user is a row in the table?
-	//HOW TO STORE JSON IN DB:
-	//  varchar
+
+	//data RETURNS JSON OBJECT STRING
+	$.post( "userData.php", function( data ) {
+		//data.trim();
+		userData = JSON.parse(data);
+	});
+	
 	//GUI: 1) list users to display
-	//  2) click (or doubleclick?) on map to add location
-	//    coordinates will be displayed to user and 
-	//    included in location object
 	
-	
-	
-	//everything for our map goes here
+	//INITIALIZE THE MAP, WITHOUT ANY USER DATA YET
 	var map = L.map('map', {
 		center: [30.0, 0.0],
 		zoom: 2,
@@ -36,22 +52,33 @@ window.onload = function (){
 		maxZoom: 18
 	}).addTo(map)
 	
-	//put this in a function that accepts json array of objects, each representing a location
-	//create layergroup for markers
-	var marker = L.marker([51.5, -0.09]).addTo(map);
-	//change the following to say location's name, timeframe, and coordinates 
-	marker.bindPopup("<b>Hello world!</b><br>I am a popup.");
+	//SHOW USER DATA: why is userData undefined???
+	$('#show_loc').on('click', function() {
+		latitude = parseFloat(userData.entries.coords.lat);
+		longitude = parseFloat(userData.entries.coords.lng);
+		marker = L.marker([latitude, longitude]);
+		marker.bindPopup("<b>Hello world!</b><br>I am a popup.");
+		map.addLayer(marker);
+	});
 	
+	//REMOVE A CERTAIN USER'S LOCATIONS FROM THE MAP
+	//map.removeLayer(circle);//where circle is a layer
+	
+			
+	
+	//GET COORDINATES FOR A NEW LOCATION TO BE ADDED TO USER'S MAP
 	var popup = L.popup();
 	function onMapClick(e) {
 		popup
 		.setLatLng(e.latlng)
 		.setContent("Location of " + e.latlng.toString() + " to be saved.")
 		.openOn(map);
+		$('#lat').html(e.latlng.lat);
+		$('#lng').html(e.latlng.lng);
 	}
 	map.on('click', onMapClick);
 	
-	//datepicker code:
+	//DATEPICKER CODE
 	/*
 	$('#date').DatePicker({
 		flat: true,
@@ -67,8 +94,8 @@ window.onload = function (){
 		$(dateDivs[x]).DatePicker({
 			flat: true,
 			format:'m/d/Y',
-			date: '2015-03-04',
-			current: '2015-03-04',
+			date: '03-04-2015',
+			current: '03-04-2015',
 			starts: 0,
 			//position: 'r',
 			onBeforeShow: function(){
@@ -83,11 +110,23 @@ window.onload = function (){
 		});
 	}
 	
-	//set button for sending ALL new entry data to server
+	
+	
+	
+	//FUNCTION TO ADD A JSON LOCATON OBJECT TO THE LOCATION ARRAY
+	//  AND THEN SAVE THE JSON LOCATION OBJECT FOR THE CURRENT USER
 	$('button.ajax').on('click', function() {
+		
+		//SET TO TRUE IF THERE ARE ANY USER INPUT ERRORS
+		var errors = false;
+		var errors_string = "";
+		
+		//CLEAR ANY POSSIBLE ERRORS FROM PREVIOUS CLICKS
+		$('#newEntryErrors').html("");
+		
+		//GET AND FILTER DATE RANGE INPUT
 		var startDate = $('#startDate').DatePickerGetDate(true);
 		var endDate = $('#endDate').DatePickerGetDate(true);
-		
 		//adapted from: http://stackoverflow.com/questions/5619202/converting-string-to-date-in-js
 		var parts = startDate.split('/');
 		startDate = new Date(parts[2],parts[0]-1,parts[1]);
@@ -95,66 +134,83 @@ window.onload = function (){
 		endDate = new Date(parts[2],parts[0]-1,parts[1]);
 		//alert(startDate);
 		//alert(endDate);
-		/*
-		//use the following to convert the dates:
-		//adapted from: http://stackoverflow.com/questions/5619202/converting-string-to-date-in-js
-		var parts ='04/03/2014'.split('/');
-		//please put attention to the month (parts[0]), Javascript counts months from 0:
-		// January - 0, February - 1, etc
-		var mydate = new Date(parts[2],parts[0]-1,parts[1]);
-		alert(mydate);		
-		*/
 		
 		//check input before sending
 		if (startDate > endDate){
-			alert("Error: Start date is later than end date!");
-			return;
+			//alert("Error: Start date is later than end date!");
+			errors_string += "Error: Start date is later than end date!<br><br>";
+			errors = true;
 		}
-		//more checks needed here
 		
+		//GET AND FILTER LOCATION NAME INPUT
+		//var latitude = '';
+		//var longitude = '';
+		latitude = $('#lat').html();
+		longitude = $('#lng').html();
+		if (latitude == 'Latitude: not yet selected' || 
+			longitude == 'Longitude: not yet selected') {
+			errors_string += "Error: No latitude or longitude specified.<br>Click on the map to get coordinates.<br><br>";
+			errors = true;
+		}
+
+		//GET AND FILTER LOCATION INPUT
+		loc_name = $('#loc_name').val();
+		loc_name.trim();
+		if (loc_name == ''){
+			errors_string += "Error: No location name provided.<br><br>";
+			errors = true;
+		}
+		
+		//STOP HERE IF THERE ARE ANY USER INPUT ERRORS,
+		//  AND DISPLAY THESE ERRORS TO THE USER
+		if (errors) {
+			$('#newEntryErrors').html(errors_string);
+			return;
+		} else {
+		//CREATE THE JSON OBJECT STRING FROM THE PRECEDING VARIABLES
+			loc = { "entries":
+					{ "coords": {"lat":latitude, "lng":longitude},
+					"loc_name": loc_name,
+					"timeframe": {"start":startDate, "end":endDate} 
+					}
+				};
+			JSON.stringify(loc);
+		}
+		
+		
+		//POST THE JSON TO THE USER'S ACCOUNT ON THE SERVER
 		//get response from this post as json to load locations on map (refresh map)
-		$.post( "newLoc.php", { startDate:startDate, endDate:endDate })
+		$.post( "update.php", {loc:loc} )
 			.done(function( data ) {
-				alert( "Data Loaded: " + data );
+				//REMOVE THE OLD MARKER FROM THE MAP
+					//map.removeLayer(marker);
+				//ADD THE NEW LOCATION TO THE MAP
+				latitude = parseFloat(latitude);
+				longitude = parseFloat(longitude);
+				marker = L.marker([latitude, longitude]);
+				//change the following to say location's name, timeframe, and coordinates 
+				marker.bindPopup("<b>Hello world!</b><br>I am a popup.");
+				map.addLayer(marker);
+				//debug
+				$('#newEntryErrors').html(data);
+			})
+			.fail(function( data ) {//HAVE DATA RETURN ERROR MESSAGES
+				$('#newEntryErrors').html(data);
 			});
-			//check docs for failure code
-	});
-	//jquery ajax form submission
-	/*
-	$('form.ajax').on('submit', function() {
-		//get data
-		//send data
-		alert("got here");
-		$.ajax({
-			type: "POST",
-			dataType: "text",
-			url: "newLoc.php",
-			data: { loc: "2" },//fill this in correctly!!
-			success: function(response){
-				console.log(response);//debug
-				//do stuff with response
-			}
-		});
-	});
-	*/
+		
 	
-	/*
-	//http://api.jquery.com/jQuery.ajax/
-	var menuId = $( "ul.nav" ).first().attr( "id" );
-	var request = $.ajax({
-	  url: "script.php",
-	  type: "POST",
-	  data: { id : menuId },
-	  dataType: "html"
 	});
-	 
-	request.done(function( msg ) {
-	  $( "#log" ).html( msg );
+	
+	
+	//LOGOUT
+	$('#logout').on('click', function() {
+		$.post( "logout.php" );
 	});
-	 
-	request.fail(function( jqXHR, textStatus ) {
-	  alert( "Request failed: " + textStatus );
-	});
-	*/
+	
+	
+	
+	
 	
 }
+
+

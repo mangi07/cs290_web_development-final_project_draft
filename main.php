@@ -2,7 +2,12 @@
 session_start();
 
 //code here to check for login
-
+if (!isset($_SESSION['user'])){
+	echo "You must be logged in to view this page.<br>
+		<button onclick='window.location.href = \"index.php\"'>Log In</button>
+	";
+	die();
+}
 
 ?>
 
@@ -163,6 +168,7 @@ session_start();
 </head>
 <body>
 	<div id="map"></div>
+	<button id="show_loc">Show Your Location</button>
 	
 	<!--personal attempt
 	<div class="map">
@@ -172,13 +178,23 @@ session_start();
 	
 	<!-- To enter all data for a new location to be placed on the user's map -->
 	<div id="newEntry">
+		<div>Location Name: <input id="loc_name" type="text"></div>
+		
 		<!-- To choose the range of days the user was at a location: -->
 		<div id="date">
 			<div id="startDate"></div>
 			<div id="endDate"></div>
 		</div>
 		
+		<div>
+			<h3>Location</h3>
+			<p id="lat">Latitude: not yet selected</p>
+			<p id="lng">Longitude: not yet selected</p>
+		</div>
 		
+		<!-- using $.post() -->
+		<button class="ajax">Submit</button>
+		<div id="newEntryErrors"></div>
 	</div>
 	
 	<!--ONLY FOR LEARNING PURPOSES
@@ -186,21 +202,10 @@ session_start();
 		<input type="submit" value="Submit">
 	</form>
 	-->
-	<!-- using $.post() -->
-	<button class="ajax">Submit using $.post()</button>
 	
-	<!-- Provides logout functionality: -->
-	<?php
-	/*
-		$_SESSION = array();
-		session_destroy();
-		$filePath = explode('/', $_SERVER['PHP_SELF'], -1);
-		$filePath = implode('/', $filePath);
-		$redirect = "http://" . $_SERVER['HTTP_HOST'] . $filePath;
-		header("Location: {$redirect}/login.html", true);
-		die();
-	*/
-	?>
+	<!-- Logout functionality provided in main.js (160-166) is attached to this button: -->
+	<button onclick="window.location.href = 'logout.php'">Log Out</button>
+	
 	
 	
 </body>

@@ -1,7 +1,12 @@
 <?php
 session_start();
 
-error_reporting(E_ALL);
+/*
+AUTHOR:	Benjamin R. Olson
+DATE:	March 8, 2015
+COURSE: CS 290 - Web Development, Oregon State University
+*/
+
 
 ?>
 
@@ -18,12 +23,17 @@ error_reporting(E_ALL);
 </head>
 
 <body>
-	<div>
+	<div class="centered box">
+		<h1>Personal Map</h1>
+		<h3>Created By Ben R. Olson</h3>
+
 		<p>Login or Create an Account</p>
 		<p>Username: <input id="userfield" type="text"></p>
 		<p>Password: <input id="passfield" type="password"></p>
-		<button id="login">Login</button>
-		<button id="create_user">Create User</button>
+		<button id="login" class="button">Login</button>
+		<button id="create_user" class="button">Create User</button>
 		<p id="errors" style="color:red;"></p>
 	</div>
 </body>
+
+

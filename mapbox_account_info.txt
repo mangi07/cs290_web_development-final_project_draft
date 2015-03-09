@@ -1,0 +1,20 @@
+<!--
+mapbox account:
+uersname: map13
+Ben Olson
+benrolson@gmail.com
+Iwtvage.
+
+api key:
+pk.eyJ1IjoibWFwMTMiLCJhIjoieHFnSkh1RSJ9.pbbOa2J6sV8g_qLAr0E45Q
+
+default secret token:
+sk.eyJ1IjoibWFwMTMiLCJhIjoiM1FfNW90byJ9.B6F4jvXF8HqNGOPbhw2csg
+
+default public token:
+pk.eyJ1IjoibWFwMTMiLCJhIjoieHFnSkh1RSJ9.pbbOa2J6sV8g_qLAr0E45Q
+
+map id:
+map13.lbo541k8
+
+-->

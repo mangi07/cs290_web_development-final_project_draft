@@ -5,13 +5,11 @@ include 'storedInfo.php';
 $mysqli = new mysqli("localhost", "root", $myPassword, "final_project_db");
 if ($mysqli->connect_errno) {
 	echo "Failed to connect to MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error;
-} else {
-	//echo "Connection successful!<br>";
 }
 
 //close this connection with $mysqli->close(); in files in which it is used.
 
-/*USE THE FOLLOWING FOR TABLE CREATION and queries:
+/*USE THE FOLLOWING FOR TABLE CREATION:
 
 CREATE TABLE users(
 		username VARCHAR(255) PRIMARY KEY, 
@@ -19,12 +17,9 @@ CREATE TABLE users(
 		locations LONGTEXT
 		);
 		
-INSERT INTO users (?) VALUES (?) WHERE username = ?;
-
-//put this in a for loop:
-SELECT locations FROM `users` WHERE username = ?;
 
 */
 
 ?>
+
 

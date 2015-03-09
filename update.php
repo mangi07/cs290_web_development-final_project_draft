@@ -1,6 +1,14 @@
 <?php
 session_start();
 
+/*
+AUTHOR:	Benjamin R. Olson
+DATE:	March 8, 2015
+COURSE: CS 290 - Web Development, Oregon State University
+*/
+
+
+
 //connect to the database
 include ("db.php");
 
@@ -19,28 +27,29 @@ if (isset($_SESSION["user"]) &&
 		"UPDATE users SET locations = ? WHERE username = ?"
 	))){
 		echo "failed to save location";
-		//echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
 	}
 	
 	if (!(
 		$stmt->bind_param("ss", $json, $user) &&
 		$stmt->execute()
 	)) {
-		echo "fail to save location";
+		echo "failed to save location";
 		$stmt->close();
+		$mysqli->close();
 		die();
 	}
 	
 	
 	$stmt->close();
-
+	$mysqli->close();
+	
 	echo "success";
 	
 } else {
-	echo "fail to save location";
+	echo "failed to save location";
 }
 
 
-
-
 ?>
+
+
